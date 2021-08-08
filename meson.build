@@ -4,6 +4,7 @@ c = meson.get_compiler('c')
 
 src = files([
   'main.cc',
+  'box_filter.c',
 ])
 
 gtest = dependency(
@@ -22,11 +23,14 @@ cpp_arg = [
     '-ffast-math',
 ]
 
+c_arg = cpp_arg
+
 executable(
   'box_filter',
   sources: src,
   dependencies: lib,
   cpp_args: cpp_arg,
+  c_args: c_arg,
 )
 
 test_src = files([
