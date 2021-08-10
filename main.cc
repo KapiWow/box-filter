@@ -27,7 +27,7 @@ void benchmark(box_func&& func, cv::Mat& image, const char* name, bool is_write 
         time_values.push_back(dt);
     }
     std::sort(time_values.begin(), time_values.end());
-    std::cout << name << ", average: " << time_values[iter_count / 2] << std::endl;
+    std::cout << name << ", 50%:     " << time_values[iter_count / 2] << std::endl;
     std::cout << name << ", 10%:     " << time_values[iter_count / 10] << std::endl;
     std::cout << name << ", 90%:     " << time_values[iter_count * 9 / 10] << std::endl;
     std::cout << "========================================" << std::endl;

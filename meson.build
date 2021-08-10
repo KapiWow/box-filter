@@ -33,15 +33,23 @@ executable(
   c_args: c_arg,
 )
 
+test_name = [
+  'box_filter_test',
+  'simd_test',
+]
+
 test_src = files([
-  'box_filter_test.cc'
+  'box_filter_test.cc',
+  'simd_test.cc',
 ])
 
-test(
-  'box_filter_test',
-  executable(
-    'box_filter_test',
-    sources: test_src,
-    dependencies: [gtest]
+foreach name : test_name
+  test(
+    name,
+    executable(
+      name,
+      sources: name + '.cc',
+      dependencies: [gtest]
+    )
   )
-)
+endforeach
