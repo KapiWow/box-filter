@@ -5,6 +5,7 @@ c = meson.get_compiler('c')
 src = files([
   'main.cc',
   'box_filter.c',
+  'box_filter_simd.cc',
 ])
 
 gtest = dependency(
@@ -14,6 +15,7 @@ gtest = dependency(
 
 lib = [
   dependency('opencv'),
+  dependency('openmp'),
 ]
 
 cpp_arg = [
@@ -21,9 +23,14 @@ cpp_arg = [
     '-march=native',
     '-g',
     '-ffast-math',
+#    '-fopt-info',
 ]
 
 c_arg = cpp_arg
+
+cpp_arg += [
+  '-std=c++17',
+]
 
 executable(
   'box_filter',

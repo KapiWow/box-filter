@@ -44,36 +44,3 @@ TEST (simd, int_8_add_scalar)
         ASSERT_EQ(b[i], arr1[i] + 1);
     }
 }
-
-TEST (simd, int_8_mult)
-{
-    int_8 a, b;
-    a.read(arr1);
-    b.read(arr2);
-    int_8 c = a * b;
-    for (int i = 0; i != 8; i++) {
-        ASSERT_EQ(c[i], arr1[i] * arr2[i]);
-    }
-}
-
-TEST (simd, int_8_mult_scalar)
-{
-    int_8 a;
-    a.read(arr1);
-    int_8 b = a * 2;
-    for (int i = 0; i != 8; i++) {
-        ASSERT_EQ(b[i], arr1[i] * 2);
-    }
-}
-
-TEST (simd, int_8_bit_shift)
-{
-    int_8 a;
-    a.read(arr1);
-    int_8 b = a << 1;
-    int_8 c = a >> 1;
-    for (int i = 0; i != 8; i++) {
-        ASSERT_EQ(b[i], arr1[i] << 1);
-        ASSERT_EQ(c[i], arr1[i] >> 1);
-    }
-}

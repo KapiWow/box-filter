@@ -8,6 +8,7 @@
 extern "C" {
     #include <box_filter.h>
 }
+#include <box_filter_simd.hh>
 
 using box_func = std::function<void(unsigned char*, unsigned char*, int, int)>;
 
@@ -19,14 +20,17 @@ void benchmark(box_func&& func, cv::Mat& image, const char* name, bool is_write 
     std::vector<int> time_values;
     time_values.reserve(iter_count);
 
+    int sum = 0;
     for (int i = 0; i < iter_count; i++) {
         high_resolution_clock::time_point _t0{high_resolution_clock::now()};
         func(image.data, filtered_image.data, image.size[1], image.size[0]);
         high_resolution_clock::time_point _t1{high_resolution_clock::now()};
         int dt = duration_cast<microseconds>(_t1 - _t0).count();
+        sum += dt;
         time_values.push_back(dt);
     }
     std::sort(time_values.begin(), time_values.end());
+    std::cout << name << ", mid:     " << sum / iter_count << std::endl;
     std::cout << name << ", 50%:     " << time_values[iter_count / 2] << std::endl;
     std::cout << name << ", 10%:     " << time_values[iter_count / 10] << std::endl;
     std::cout << name << ", 90%:     " << time_values[iter_count * 9 / 10] << std::endl;
@@ -53,6 +57,7 @@ int main(int argc, char** argv) {
 
     benchmark(box_filter_5x5, image, "initial version");
     benchmark(box_filter_optimized_5x5, image, "optimized version", true);
+    benchmark(box_filter_simd_5x5, image, "simd version", true);
 
     return 0;
 }
