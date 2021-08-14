@@ -5,7 +5,6 @@ c = meson.get_compiler('c')
 common = files([
   'box_filter.c',
   'box_filter_simd.cc',
-  'simd.cc'
 ])
 
 src = files([
