@@ -16,30 +16,30 @@ int get_size(int nx) {
 
 // calculate line sum of 5 near elements from {y} line of {in} to {buffer_id} line of {buffer}
 void update_buffer(unsigned char* in, u_int16_t* buffer, int y, int buffer_id, int nx) {
-    const int buffer_size = 16*((nx - edge_offset * 2) / 16) + 16;
+    const int buffer_size = get_size(nx);
     uint16_t_16 acc;
     uint16_t_16 temp;
     uint8_t_16 acc8;
-    for (int x = edge_offset; x <= (nx - edge_offset) - 16; x += 16) {
-        acc8.read(&in[get_id(x - edge_offset, y, nx)]);
+    for (int x = 0; x < buffer_size; x += simd_size) {
+        acc8.read(&in[get_id(x, y, nx)]);
         convert_u8_u16_16(acc8, acc);
          
         for (int i = -edge_offset + 1; i <= edge_offset; i++) {
-            convert_u8_u16_16(uint8_t_16 {&in[get_id(x + i, y, nx)]}, temp);
+            convert_u8_u16_16(uint8_t_16 {&in[get_id(x + edge_offset + i, y, nx)]}, temp);
             acc += temp;
         }
-        acc.write(&buffer[get_id(x - edge_offset, buffer_id, buffer_size)]);
+        acc.write(&buffer[get_id(x, buffer_id, buffer_size)]);
     }
 }
 
 // calculate sum of 5 lines in {buffer} and write sum of 4 lines for next filtered
 // result to last line of {buffer}
 void first_buffer_sum(unsigned char* out, u_int16_t* buffer, int nx) {
-    const int buffer_size = 16*((nx - edge_offset * 2) / 16) + 16;
+    const int buffer_size = get_size(nx);
     uint16_t_16 sum;
     uint16_t_16 buf;
     uint8_t_16 res;
-    for (int x = 0; x <= get_size(nx) - 16; x += 16) {
+    for (int x = 0; x < buffer_size; x += simd_size) {
         sum.read(&buffer[get_id(x, 0, buffer_size)]);
         buf.read(&buffer[get_id(x, 1, buffer_size)]);
         for (int i = 2; i != filter_size; i++) {
@@ -57,17 +57,17 @@ void first_buffer_sum(unsigned char* out, u_int16_t* buffer, int nx) {
 // calculate sum as saved sum of previous 4 lines from the last line of {buffer}
 // and one new line with id {buffer_add_id}, updates last line of {buffer}
 void write_buffer_sum(unsigned char* out, u_int16_t* buffer, int y, int buffer_add_id, int nx) {
-    const int buffer_size = 16*((nx - edge_offset * 2) / 16) + 16;
+    const int buffer_size = get_size(nx);
     int buffer_delete_id = buffer_add_id + 1;
     buffer_delete_id = buffer_delete_id % filter_size;
     uint16_t_16 sum;
     uint16_t_16 buffer_sum;
     uint8_t_16 res;
-    for (int x = 0; x <= (nx - edge_offset*2) - 16; x+=16) {
+    for (int x = 0; x < buffer_size; x += simd_size) {
         sum.read(&buffer[get_id(x, filter_size, buffer_size)]);
         sum += uint16_t_16{&buffer[get_id(x, buffer_add_id, buffer_size)]};
         buffer_sum = sum - uint16_t_16{&buffer[get_id(x, buffer_delete_id, buffer_size)]};
-        sum /= 25;
+        sum /= filter_size * filter_size;
         convert_u16_u8_16(sum, res);
         res.write(&out[get_id(x + edge_offset, y, nx)]);
         buffer_sum.write(&buffer[get_id(x, filter_size, buffer_size)]);
@@ -75,7 +75,7 @@ void write_buffer_sum(unsigned char* out, u_int16_t* buffer, int y, int buffer_a
 }
 
 void box_filter_simd_5x5(unsigned char* in, unsigned char* out, int nx, int ny) {
-    const int buffer_size = 16*((nx - edge_offset * 2) / 16) + 16;
+    const int buffer_size = get_size(nx);
     u_int16_t* buffer = new (std::align_val_t(32)) u_int16_t[
         buffer_size * (filter_size + 1)
     ];
@@ -95,6 +95,6 @@ void box_filter_simd_5x5(unsigned char* in, unsigned char* out, int nx, int ny) 
         buffer_start_id++;
         buffer_start_id %= filter_size;
     }
-
-    free(buffer);
+    
+    operator delete[] (buffer, std::align_val_t(32));
 }

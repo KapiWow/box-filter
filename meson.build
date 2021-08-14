@@ -26,7 +26,6 @@ cpp_arg = [
     '-march=native',
     '-g',
     '-ffast-math',
-#    '-fopt-info',
 ]
 
 c_arg = cpp_arg

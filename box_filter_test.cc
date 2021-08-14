@@ -20,7 +20,6 @@ TEST(box_filter, optimal_check)
 
     for(int i = 0; i < image.size[0] * image.size[1]; i++) {
         ASSERT_EQ(filtered_image_tested.data[i], filtered_image_ref.data[i]);
-
     }
 }
 
@@ -34,7 +33,6 @@ TEST(box_filter, simd_check)
 
     for(int i = 0; i < image.size[0] * image.size[1]; i++) {
         ASSERT_EQ(filtered_image_tested.data[i], filtered_image_ref.data[i]);
-
     }
 }
 

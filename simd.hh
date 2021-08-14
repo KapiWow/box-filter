@@ -12,13 +12,13 @@ public:
     }
 
     Simd() {
-        for (int i = 0; i < N; i++) {
-            data[i] = T{0};
-        }
     }
     
     Simd(const Simd& s) {
-        *this = s;
+#pragma omp simd
+		for(int i = 0; i < N; i++) {
+            data[i] = s[i];
+        }
     }
 
     Simd(const Simd&& s) {
@@ -65,6 +65,7 @@ public:
     
     Simd operator-(const Simd& rhs) const {
         Simd temp;
+#pragma omp simd
         for (int i = 0; i < N; i++) {
             temp[i] = data[i] - rhs[i];
         }
@@ -77,6 +78,24 @@ public:
             rhs[i] = data[i] - rhs[i];
         }
         return std::move(rhs);
+    }
+    
+    Simd operator/(const Simd& rhs) const {
+        Simd temp;
+#pragma omp simd
+        for (int i = 0; i < N; i++) {
+            temp[i] = data[i] / rhs.data[i];
+        }
+        return temp;
+    }
+    
+    Simd operator/(const int rhs) const {
+        Simd temp;
+#pragma omp simd
+        for (int i = 0; i < N; i++) {
+            temp[i] = data[i] / rhs;
+        }
+        return temp;
     }
 
     Simd operator+(const Simd& rhs) const {
@@ -92,14 +111,6 @@ public:
 #pragma omp simd
         for (int i = 0; i < N; i++) {
             temp[i] = data[i] + rhs;
-        }
-        return temp;
-    }
-    
-    Simd operator* (const Simd& rhs) const {
-        Simd temp;
-        for (int i = 0; i < N; i++) {
-            temp[i] = data[i] * rhs.data[i];
         }
         return temp;
     }
@@ -126,13 +137,13 @@ public:
         }
     }
 
-    T data[N * sizeof(T)];
-
 private:
-
-    void swap( Simd& s) {
+    
+    void swap(Simd& s) {
         std::swap(data, s.data);
     }
+    
+    T data[N * sizeof(T)];
 
 };
 
