@@ -146,14 +146,14 @@ typedef Simd<uint16_t, 16> uint16_t_16;
 typedef Simd<uint32_t, 8> uint32_t_8;
 typedef Simd<uint32_t, 16> uint32_t_16;
 
-void convert_u16_u8_16(const uint16_t_16& from, uint8_t_16& to) {
+inline void convert_u16_u8_16(const uint16_t_16& from, uint8_t_16& to) {
 #pragma omp simd
     for (int i = 0; i < 16; i++) {
         to[i] = (uint8_t)from[i];
     }
 }
 
-void convert_u8_u16_16(const uint8_t_16& from, uint16_t_16& to) {
+inline void convert_u8_u16_16(const uint8_t_16& from, uint16_t_16& to) {
 #pragma omp simd
     for (int i = 0; i < 16; i++) {
         to[i] = (uint16_t)from[i];

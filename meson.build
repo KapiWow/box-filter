@@ -2,11 +2,15 @@ project('box-filter', 'c', 'cpp')
 
 c = meson.get_compiler('c')
 
-src = files([
-  'main.cc',
+common = files([
   'box_filter.c',
   'box_filter_simd.cc',
+  'simd.cc'
 ])
+
+src = files([
+  'main.cc',
+]) + common
 
 gtest = dependency(
   'gtest',
@@ -55,8 +59,10 @@ foreach name : test_name
     name,
     executable(
       name,
-      sources: name + '.cc',
-      dependencies: [gtest]
+      sources: [name + '.cc'] + common,
+      dependencies: [gtest] + lib,
+      cpp_args: cpp_arg,
+      c_args: c_arg,
     )
   )
 endforeach

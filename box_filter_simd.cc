@@ -4,9 +4,14 @@
 
 static const int edge_offset = 2;
 static const int filter_size = 5;
+static const int simd_size = 16;
 
 int get_id(int x, int y, int nx) {
     return y * nx + x;
+}
+
+int get_size(int nx) {
+    return simd_size * ((nx - edge_offset * 2) / simd_size);
 }
 
 // calculate line sum of 5 near elements from {y} line of {in} to {buffer_id} line of {buffer}
@@ -15,12 +20,12 @@ void update_buffer(unsigned char* in, u_int16_t* buffer, int y, int buffer_id, i
     uint16_t_16 acc;
     uint16_t_16 temp;
     uint8_t_16 acc8;
-    for (int x = edge_offset; x <= (nx - edge_offset); x += 16) {
+    for (int x = edge_offset; x <= (nx - edge_offset) - 16; x += 16) {
         acc8.read(&in[get_id(x - edge_offset, y, nx)]);
         convert_u8_u16_16(acc8, acc);
          
         for (int i = -edge_offset + 1; i <= edge_offset; i++) {
-            convert_u8_u16_16(uint8_t_16 {&in[get_id(x - i, y, nx)]}, temp);
+            convert_u8_u16_16(uint8_t_16 {&in[get_id(x + i, y, nx)]}, temp);
             acc += temp;
         }
         acc.write(&buffer[get_id(x - edge_offset, buffer_id, buffer_size)]);
@@ -34,7 +39,7 @@ void first_buffer_sum(unsigned char* out, u_int16_t* buffer, int nx) {
     uint16_t_16 sum;
     uint16_t_16 buf;
     uint8_t_16 res;
-    for (int x = 0; x <= (nx - edge_offset*2); x += 16) {
+    for (int x = 0; x <= get_size(nx) - 16; x += 16) {
         sum.read(&buffer[get_id(x, 0, buffer_size)]);
         buf.read(&buffer[get_id(x, 1, buffer_size)]);
         for (int i = 2; i != filter_size; i++) {
@@ -42,7 +47,7 @@ void first_buffer_sum(unsigned char* out, u_int16_t* buffer, int nx) {
         }
         sum += buf;
         
-        sum /= 25;
+        sum /= filter_size * filter_size;
         convert_u16_u8_16(sum, res);
         res.write(&out[get_id(x + edge_offset, edge_offset, nx)]);
         buf.write(&buffer[get_id(x, filter_size, buffer_size)]);
@@ -58,7 +63,7 @@ void write_buffer_sum(unsigned char* out, u_int16_t* buffer, int y, int buffer_a
     uint16_t_16 sum;
     uint16_t_16 buffer_sum;
     uint8_t_16 res;
-    for (int x = 0; x <= (nx - edge_offset*2); x+=16) {
+    for (int x = 0; x <= (nx - edge_offset*2) - 16; x+=16) {
         sum.read(&buffer[get_id(x, filter_size, buffer_size)]);
         sum += uint16_t_16{&buffer[get_id(x, buffer_add_id, buffer_size)]};
         buffer_sum = sum - uint16_t_16{&buffer[get_id(x, buffer_delete_id, buffer_size)]};
@@ -80,11 +85,11 @@ void box_filter_simd_5x5(unsigned char* in, unsigned char* out, int nx, int ny) 
     for (int y = 0; y != filter_size; y++) {
         update_buffer(in, buffer, y, y, nx);
     }
-    
+
     first_buffer_sum(out, buffer, nx);
 
     for (int y = edge_offset + 1; y != ny - edge_offset; y++) {
-        update_buffer(in, buffer, y, buffer_start_id, nx);
+        update_buffer(in, buffer, y + edge_offset, buffer_start_id, nx);
         write_buffer_sum(out, buffer, y, buffer_start_id, nx);
         
         buffer_start_id++;
